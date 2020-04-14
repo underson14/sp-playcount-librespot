@@ -1,21 +1,31 @@
 package xyz.gianlu.librespot;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.net.httpserver.*;
+import com.sun.net.httpserver.HttpsServer;
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsParameters;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import xyz.gianlu.librespot.mercury.MercuryClient;
 import xyz.gianlu.librespot.mercury.MercuryRequests;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -26,14 +36,12 @@ public class HTTPSServer {
     public HttpServer httpServer;
     public ThreadPoolExecutor threadPoolExecutor;
     private Cache cache;
-    private Gson gson;
 
     public HTTPSServer(AbsConfiguration conf, MercuryClient mc) throws IOException {
         this.conf = conf;
         this.mercuryClient = mc;
         CacheManager cm = CacheManager.getInstance();
         this.cache = cm.getCache("cache");
-        this.gson = new GsonBuilder().disableHtmlEscaping().create();
     }
 
     public class PlayCountHandler implements HttpHandler {
@@ -120,7 +128,7 @@ public class HTTPSServer {
                             }
                         }
 
-                        response = gson.toJson(res);
+                        response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                         if (statusCode == 200) { // If response was successful, save response in cache
                             cache.put(new Element(albumId, response));
                         }
