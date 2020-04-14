@@ -15,7 +15,7 @@ public class Main {
     public static void main(String[] args) throws IOException, GeneralSecurityException, Session.SpotifyAuthenticationException, MercuryClient.MercuryException {
         AbsConfiguration conf = new FileConfiguration(args);
         LogManager.getRootLogger().setLevel(conf.loggingLevel());
-        Session session = new Session.Builder(conf).create();
+        Session session = new Session.Builder(conf, args).create();
 
         HTTPSServer httpsServer = new HTTPSServer(conf, session.mercury());
         httpsServer.start();

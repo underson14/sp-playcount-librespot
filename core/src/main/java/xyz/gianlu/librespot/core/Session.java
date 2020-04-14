@@ -810,48 +810,19 @@ public final class Session implements Closeable, SubListener {
         private final Inner inner;
         private final AuthConfiguration authConf;
         private Authentication.LoginCredentials loginCredentials = null;
+        private String[] args;
 
         public Builder(@NotNull Connect.DeviceType deviceType, @NotNull String deviceName, @NotNull AbsConfiguration configuration) {
             this.inner = new Inner(deviceType, deviceName, configuration);
             this.authConf = configuration;
         }
 
-        public Builder(@NotNull AbsConfiguration configuration) {
+        public Builder(@NotNull AbsConfiguration configuration, @Nullable String[] args) {
             this.inner = Inner.from(configuration);
             this.authConf = configuration;
+            this.args = args;
         }
 
-        /**
-         * Authenticate with your Facebook account, will prompt to open a link in the browser.
-         */
-        @NotNull
-        public Builder facebook() throws IOException {
-            try (FacebookAuthenticator authenticator = new FacebookAuthenticator()) {
-                loginCredentials = authenticator.lockUntilCredentials();
-                return this;
-            } catch (InterruptedException ex) {
-                throw new IOException(ex);
-            }
-        }
-
-        /**
-         * Authenticate with a saved credentials blob.
-         *
-         * @param username Your Spotify username
-         * @param blob     The Base64-decoded blob
-         */
-        @NotNull
-        public Builder blob(String username, byte[] blob) throws GeneralSecurityException, IOException {
-            loginCredentials = inner.decryptBlob(username, blob);
-            return this;
-        }
-
-        /**
-         * Authenticate with username and password. The credentials won't be saved.
-         *
-         * @param username Your Spotify username
-         * @param password Your Spotify password
-         */
         @NotNull
         public Builder userPass(@NotNull String username, @NotNull String password) {
             loginCredentials = Authentication.LoginCredentials.newBuilder()
@@ -880,29 +851,14 @@ public final class Session implements Closeable, SubListener {
             }
 
             if (loginCredentials == null) {
-                String blob = authConf.authBlob();
-                String username = authConf.authUsername();
-                String password = authConf.authPassword();
+                if (args.length < 2) throw new IllegalArgumentException("Missing username and password!");
+                String username = args[0];
+                String password = args[1];
 
-                switch (authConf.authStrategy()) {
-                    case FACEBOOK:
-                        facebook();
-                        break;
-                    case BLOB:
-                        if (username == null) throw new IllegalArgumentException("Missing authUsername!");
-                        if (blob == null) throw new IllegalArgumentException("Missing authBlob!");
-                        blob(username, Base64.getDecoder().decode(blob));
-                        break;
-                    case USER_PASS:
-                        if (username == null) throw new IllegalArgumentException("Missing authUsername!");
-                        if (password == null) throw new IllegalArgumentException("Missing authPassword!");
-                        userPass(username, password);
-                        break;
-                    case ZEROCONF:
-                        throw new IllegalStateException("Cannot handle ZEROCONF! Use ZeroconfServer.");
-                    default:
-                        throw new IllegalStateException("Unknown auth authStrategy: " + authConf.authStrategy());
-                }
+                if (username == null) throw new IllegalArgumentException("Missing authUsername!");
+                if (password == null) throw new IllegalArgumentException("Missing authPassword!");
+                userPass(username, password);
+
             }
 
             Session session = Session.from(inner);
