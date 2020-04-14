@@ -59,25 +59,32 @@ public class HTTPSServer {
             String response = "";
             int statusCode = 500;
             if (httpEx.getRequestMethod().equals("GET")) {
-                Map<String, List<String>> query = urlParse.parse(httpEx.getRequestURI().getQuery());
                 Map<String, Object> res = new HashMap<>();
-
-                if (!query.containsKey("albumid")) {
+                if (httpEx.getRequestURI().getQuery() == null) {
                     statusCode = 400;
                     res.put("success", false);
                     res.put("data", "albumid is not defined in the query");
-                } else if (query.get("albumid").get(0).length() != 22) {
-                    statusCode = 400;
-                    res.put("success", false);
-                    res.put("data", "albumid is invalid; wanted 22 characters, found " + query.get("albumid").get(0).length());
+                    response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                 } else {
-                    String albumId = query.get("albumid").get(0);
-                    if (cache.isKeyInCache(albumId)) {
-                        statusCode = 200;
-                        response = cache.get(albumId).getObjectValue().toString();
+                    Map<String, List<String>> query = urlParse.parse(httpEx.getRequestURI().getQuery());
+                    if (!query.containsKey("albumid")) {
+                        statusCode = 400;
+                        res.put("success", false);
+                        res.put("data", "albumid is not defined in the query");
+                        response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data")); // TODO: don't repeat this line ffs
+                    } else if (query.get("albumid").get(0).length() != 22) {
+                        statusCode = 400;
+                        res.put("success", false);
+                        res.put("data", "albumid is invalid; albumid length does not equal 22");
+                        response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                     } else {
-                        try {
-                            MercuryRequests.AlbumWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getAlbumInfo(albumId)); // Get album info with albumId
+                        String albumId = query.get("albumid").get(0);
+                        if (cache.isKeyInCache(albumId)) {
+                            statusCode = 200;
+                            response = cache.get(albumId).getObjectValue().toString();
+                        } else {
+                            try {
+                                MercuryRequests.AlbumWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getAlbumInfo(albumId)); // Get album info with albumId
 
 //                            This part processes the output before sending, which results in lower response size. However, it doubles the response time.
 //                            This could be fixed by optimizing it, but I don't feel like doing that right now :P
@@ -108,32 +115,35 @@ public class HTTPSServer {
 //
 //                            data.put("discs", discsArr);
 
-                            statusCode = 200;
-                            res.put("success", true);
-                            res.put("data", resp.obj);
-                        } catch (Exception e) {
-                            res.put("success", false);
-                            if (e.getMessage().startsWith("status: ")) {
-                                System.out.println(e.getMessage().substring(8));
-                                statusCode = Integer.parseInt(e.getMessage().substring(8));
-                                if (statusCode == 404) {
-                                    res.put("data", "albumid invalid; couldn't find album");
+                                statusCode = 200;
+                                res.put("success", true);
+                                res.put("data", resp.obj);
+                            } catch (Exception e) {
+                                res.put("success", false);
+                                if (e.getMessage().startsWith("status: ")) {
+                                    System.out.println(e.getMessage().substring(8));
+                                    statusCode = Integer.parseInt(e.getMessage().substring(8));
+                                    if (statusCode == 404) {
+                                        res.put("data", "albumid invalid; couldn't find album");
+                                    } else {
+                                        e.printStackTrace();
+                                        res.put("data", "An unknown error has occurred; logged to console");
+                                    }
                                 } else {
                                     e.printStackTrace();
                                     res.put("data", "An unknown error has occurred; logged to console");
                                 }
-                            } else {
-                                e.printStackTrace();
-                                res.put("data", "An unknown error has occurred; logged to console");
                             }
-                        }
 
-                        response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
-                        if (statusCode == 200) { // If response was successful, save response in cache
-                            cache.put(new Element(albumId, response));
+                            response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
+                            if (statusCode == 200) { // If response was successful, save response in cache
+                                cache.put(new Element(albumId, response));
+                            }
                         }
                     }
                 }
+
+
             } else { // Invalid request type
                 statusCode = 404;
                 response = "Cannot " + httpEx.getRequestMethod() + " " + httpEx.getRequestURI().toString();
