@@ -149,7 +149,7 @@ public class HTTPSServer {
 
     public void start() {
         try {
-            InetSocketAddress address = new InetSocketAddress(conf.port());
+            InetSocketAddress address = new InetSocketAddress(System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : conf.port());
 
             if (this.conf.enableHttps()) {
                 this.httpsServer = HttpsServer.create(address, 0);
@@ -189,12 +189,14 @@ public class HTTPSServer {
                 httpsServer.createContext(conf.endpoint(), new PlayCountHandler(this.mercuryClient));
                 httpsServer.setExecutor(threadPoolExecutor);
                 httpsServer.start();
+                System.out.println("Listening on port " + httpsServer.getAddress().getPort());
             } else {
                 this.httpServer = HttpServer.create(address, 0);
                 threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
                 httpServer.createContext(conf.endpoint(), new PlayCountHandler(this.mercuryClient));
                 httpServer.setExecutor(threadPoolExecutor);
                 httpServer.start();
+                System.out.println("Listening on port " + httpServer.getAddress().getPort());
             }
         } catch (Exception e) {
             e.printStackTrace();

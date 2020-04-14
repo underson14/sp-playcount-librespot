@@ -851,14 +851,20 @@ public final class Session implements Closeable, SubListener {
             }
 
             if (loginCredentials == null) {
-                if (args.length < 2) throw new IllegalArgumentException("Missing username and password!");
-                String username = args[0];
-                String password = args[1];
+                String username;
+                String password;
+                if (System.getenv("USERNAME") != null && System.getenv("PASSWORD") != null) {
+                    username = System.getenv("USERNAME");
+                    password = System.getenv("PASSWORD");
+                } else {
+                    if (args.length < 2) throw new IllegalArgumentException("Missing username and password!");
+                    username = args[0];
+                    password = args[1];
+                }
 
                 if (username == null) throw new IllegalArgumentException("Missing authUsername!");
                 if (password == null) throw new IllegalArgumentException("Missing authPassword!");
                 userPass(username, password);
-
             }
 
             Session session = Session.from(inner);
