@@ -1,73 +1,54 @@
-# librespot-java
-[![Build Status](https://travis-ci.com/librespot-org/librespot-java.svg?branch=dev)](https://travis-ci.com/librespot-org/librespot-java)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1ec8ca04e5054558a089bc7f640079a6)](https://www.codacy.com/manual/devgianlu/librespot-java?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=librespot-org/librespot-java&amp;utm_campaign=Badge_Grade)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/xyz.gianlu.librespot/librespot-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/xyz.gianlu.librespot/librespot-java)
+# sp-playcount-librespot
+`sp-playcount-librespot` is a modification of `librespot-java` that serves as an enhancement of [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount). This repository still needs to be optimized.
 
-`librespot-java` is a port of [librespot](https://github.com/librespot-org/librespot), originally written in Rust, which as evolved into the most up-to-date open-source Spotify client. Additionally, this implementation provides an useful API to request metadata or control the player, more [here](https://github.com/librespot-org/librespot-java/blob/master/api).
+# Advantages vs. [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount)
+* Does NOT require the Spotify desktop app (woo)
+* Lower CPU and memory usage (can be even lower once the code is fully changed)
+* More information given in API response
 
-## Disclaimer!
-We (the librespot-org organization and me) **DO NOT** encourage piracy and **DO NOT** support any form of downloader/recorder designed with the help of this repository. If you're brave enough to put at risk this entire project, just don't publish it. This is meant to provide support for all those devices that are not officially supported by Spotify.
+## Requirements
+* Java 8+
+* Spotify Account (recommended to create another account)
 
-## Features
-This client is pretty much capable of playing anything that's available on Spotify. 
-Its main features are:
-- Tracks and podcasts/episodes playback
-- Stations and dailymixes support
-- Local content caching
-- Zeroconf (Spotify Connect)
-- Gapless playback
-- Mixed playlists (cuepoints and transitions)
+## Installation
+1. Compile this repository or [download an executable JAR](https://github.com/evilarceus/sp-playcount-librespot/releases/latest).
+2. Run the JAR: `java -jar sp-playcount-librespot.jar <spotify_username> <spotify_password>`
+    * You only need to provide your Spotify username and password once. After `creds.json` has been generated, the username and password are not required in the launch arguments.
+3. Make any appropriate configuration changes in the generated `config.toml` file (see section below for config options).
+4. Run the JAR: `java -jar sp-playcount-librespot.jar`
 
-## Get started
-All the configuration you need is inside the `config.toml` file, there you can decide to authenticate with:
-- Username and password
-- Zeroconf
-- Facebook
-- Auth blob
+## Compiling (requires Maven)
+1. Clone this repository: `git clone https://github.com/evilarceus/sp-playcount-librespot && cd sp-playcount-librespot`
+2. Build with Maven: `mvn clean package`
+3. Run JAR file: `java -jar ./core/target/librespot-core-jar-with-dependencies.jar <spotify_username> <spotify_password>`
 
-### Username and password
-This is pretty straightforward, but remember that having hardcoded passwords isn't the best thing on earth.
+## Configuration
+A `config.toml` file is generated after you run the JAR for the first time. This file can be used to change the settings of the server. The settings are located at the very bottom of the file under `[server]`.
+To reset the configuration, simply delete the file and run the JAR again.
+```
+[server]
+port = 8080
+endpoint = "/albumPlayCount"
+enableHttps = false
+httpsKs = ""
+httpsKsPass = ""
+```
+| Option        | Description                                                              |
+|---------------|--------------------------------------------------------------------------|
+| `port`        | Selects what port to listen for HTTP requests on                         |
+| `endpoint`    | Endpoint at which the user can send HTTP GET requests to the API         |
+| `enableHttps` | If true, enables HTTPS support (requires certificate, see section below) |
+| `httpsKs`     | Location to keystore with HTTPS certificate and key                      |
+| `httpsKsPass` | Password to HTTPS keystore file (if applicable)                          |
 
-### Zeroconf
-In this mode `librespot` becomes discoverable with Spotify Connect by devices on the same network. Just open a Spotify client and select `librespot-java` from the available devices list. 
+### HTTPS Configuration
+The server can be configured to use HTTPS. If you're using LetsEncrypt, use [this guide](https://www.wissel.net/blog/2018/03/letsencrypt-java-keystore.html) to create a keystore with the certificate.
 
-If you have a firewall, you need to open the UDP port `5355` for mDNS. Then specify some random port in `zeroconf.listenPort` and open that TCP port too.
-
-### Facebook
-Authenticate with Facebook. The console will provide a link to visit in order to continue the login process.
-
-### Auth blob
-This is more advanced and should only be used if you saved an authentication blob. The blob should have already been Base64-decoded.
-
-## Run
-You can download the latest release from [here](https://github.com/librespot-org/librespot-java/releases) and then run `java -jar ./librespot-core-jar-with-dependencies.jar` from the command line.
-
-### Audio output configuration
-On some system, many mixers could be installed making librespot-java playback on the wrong one, therefore you won't hear anything and likely see an exception in the logs. If that's the case, follow the guide below:
-
-1) In your configuration file (`config.toml` by default), under the `player` section, make sure `logAvailableMixers` is set to `true` and restart the application
-2) Connect to the client and start playing something
-3) Along with the previous exception there'll be a log message saying "Available mixers: ..."
-4) Pick the right mixer and copy it's name inside the `mixerSearchKeywords` option. If you need to specify more search keywords, you can separate them with a semicolon
-5) Restart and enjoy
-
-## Build it
-This project uses [Maven](https://maven.apache.org/), after installing it you can compile with `mvn clean package` in the project root, if the compilation succeeds you'll be pleased with a JAR executable in `core/target`.
-To run the newly build jar run `java -jar ./core/target/librespot-core-jar-with-dependencies.jar`.
-
-## Protobuf generation
-The compiled Java protobuf definitions aren't versioned, therefore, if you want to open the project inside you're IDE, you'll need to run `mvn compile` first to ensure that all the necessary files are created. 
-The `com.spotify` package is reserved for the generated files.
-
-## Logging
-The application uses Log4J for logging purposes, the configuration file is placed inside `core/src/main/resources` or `api/src/main/resources` depending on what you're working with.
-
-## Related Projects
-- [librespot](https://github.com/librespot-org/librespot)
-- [ansible-role-librespot](https://github.com/xMordax/ansible-role-librespot/tree/master) - Ansible role that will build, install and configure librespot-java.
-- [spocon](https://github.com/spocon/spocon) - Install librespot-java from APT
-
-# Special thanks
-- All the developers of [librespot](https://github.com/librespot-org/librespot) which started this project in Rust
-- All the contributors of this project for testing and fixing stuff
-- <a href="https://www.yourkit.com/"><img src="https://www.yourkit.com/images/yklogo.png" height="20"></a> that provided a free license for their [Java Profiler](https://www.yourkit.com/java/profiler/)
+Then, edit `config.toml`:
+```
+[server]
+...
+enableHttps = true
+httpsKs = "<location of keystore file>"
+httpsKsPass = "<keystore password (if applicable)>"
+```
