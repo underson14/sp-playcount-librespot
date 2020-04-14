@@ -23,7 +23,8 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 session.close();
-                httpsServer.httpsServer.stop(1);
+                if (httpsServer.httpsServer != null) httpsServer.httpsServer.stop(1);
+                if (httpsServer.httpServer != null) httpsServer.httpServer.stop(1);
                 httpsServer.threadPoolExecutor.shutdownNow();
             } catch (IOException ignored) {
             }
