@@ -297,29 +297,29 @@ public final class Session implements Closeable, SubListener {
         synchronized (authLock) {
             mercuryClient = new MercuryClient(this);
             tokenProvider = new TokenProvider(this);
-            audioKeyManager = new AudioKeyManager(this);
-            channelManager = new ChannelManager(this);
-            api = new ApiClient(this);
-            cdnManager = new CdnManager(this);
-            contentFeeder = new PlayableContentFeeder(this);
-            cacheManager = new CacheManager(inner.configuration);
-            dealer = new DealerClient(this);
-            player = new Player(inner.configuration, this);
-            search = new SearchManager(this);
+//            audioKeyManager = new AudioKeyManager(this);
+//            channelManager = new ChannelManager(this);
+//            api = new ApiClient(this);
+//            cdnManager = new CdnManager(this);
+//            contentFeeder = new PlayableContentFeeder(this);
+//            cacheManager = new CacheManager(inner.configuration);
+//            dealer = new DealerClient(this);
+//            player = new Player(inner.configuration, this);
+//            search = new SearchManager(this);
 
             authLock.set(false);
             authLock.notifyAll();
         }
 
-        dealer.connect();
-        player.initState();
+//        dealer.connect();
+//        player.initState();
 
         TimeProvider.init(this);
 
         LOGGER.info(String.format("Authenticated as %s!", apWelcome.getCanonicalUsername()));
 
 
-        mercuryClient.interestedIn("spotify:user:attributes:update", this);
+//        mercuryClient.interestedIn("spotify:user:attributes:update", this);
     }
 
     /**

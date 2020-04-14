@@ -11,3 +11,5 @@ credentials.json
 bin/
 .classpath
 .vscode/
+creds.json
+*.ks

@@ -93,6 +93,16 @@ public final class MercuryRequests {
     }
 
     @NotNull
+    public static JsonMercuryRequest<AlbumWrapper> getAlbumInfo(@NotNull String albumId) {
+        return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://album/v1/album-app/album/spotify:album:%s/desktop?catalogue=free&locale=en", albumId)), AlbumWrapper.class);
+    }
+
+    @NotNull
+    public static RawMercuryRequest getAlbumInfoRaw(@NotNull String albumId) {
+        return RawMercuryRequest.get(String.format("hm://album/v1/album-app/album/spotify:album:%s/desktop?catalogue=free&locale=en", albumId));
+    }
+
+    @NotNull
     public static JsonMercuryRequest<ResolvedContextWrapper> resolveContext(@NotNull String uri) {
         return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://context-resolve/v1/%s", uri)), ResolvedContextWrapper.class);
     }
@@ -156,6 +166,13 @@ public final class MercuryRequests {
     public static final class KeymasterToken extends JsonWrapper {
 
         public KeymasterToken(@NotNull JsonObject obj) {
+            super(obj);
+        }
+    }
+
+    public static final class AlbumWrapper extends JsonWrapper {
+
+        public AlbumWrapper(@NotNull JsonObject obj) {
             super(obj);
         }
     }

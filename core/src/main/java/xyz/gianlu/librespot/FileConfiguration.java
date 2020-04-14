@@ -440,6 +440,31 @@ public final class FileConfiguration extends AbsConfiguration {
         return config.get("proxy.password");
     }
 
+    @Override
+    public int port() {
+        return config.get("server.port");
+    }
+
+    @Override
+    public @NotNull String endpoint() {
+        return config.get("server.endpoint");
+    }
+
+    @Override
+    public boolean enableHttps() {
+        return config.get("server.enableHttps");
+    }
+
+    @Override
+    public @Nullable String httpsKs() {
+        return config.get("server.httpsKs");
+    }
+
+    @Override
+    public @Nullable String httpsKsPass() {
+        return config.get("server.httpsKsPass");
+    }
+
     private final static class PropertiesFormat implements ConfigFormat<Config> {
         @Override
         public ConfigWriter createWriter() {
