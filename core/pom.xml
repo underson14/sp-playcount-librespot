@@ -92,10 +92,11 @@
             <version>3.6</version>
         </dependency>
 
+        <!-- HTTP Cache -->
         <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-            <version>2.9.0</version>
+            <groupId>org.cache2k</groupId>
+            <artifactId>cache2k-core</artifactId>
+            <version>1.2.4.Final</version>
         </dependency>
     </dependencies>
 </project>

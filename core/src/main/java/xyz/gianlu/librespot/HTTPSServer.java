@@ -6,9 +6,10 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
+import org.cache2k.Cache;
+import org.cache2k.Cache2kBuilder;
+import org.cache2k.CacheEntry;
+import org.cache2k.event.CacheEntryExpiredListener;
 import xyz.gianlu.librespot.mercury.MercuryClient;
 import xyz.gianlu.librespot.mercury.MercuryRequests;
 
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class HTTPSServer {
     private AbsConfiguration conf;
@@ -35,13 +37,20 @@ public class HTTPSServer {
     public HttpsServer httpsServer;
     public HttpServer httpServer;
     public ThreadPoolExecutor threadPoolExecutor;
-    private Cache cache;
+    private Cache<String, String> cache;
 
     public HTTPSServer(AbsConfiguration conf, MercuryClient mc) throws IOException {
         this.conf = conf;
         this.mercuryClient = mc;
-        CacheManager cm = CacheManager.getInstance();
-        this.cache = cm.getCache("cache");
+        this.cache = new Cache2kBuilder<String, String>() {}
+                .name("cache")
+                .entryCapacity(10000)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .resilienceDuration(5, TimeUnit.SECONDS)
+                .addListener((CacheEntryExpiredListener<String, String>) (cache, cacheEntry) -> {
+                    cache.remove(cacheEntry.getKey()); // Remove cached result when it expires; will be refreshed when requested
+                })
+                .build();
     }
 
     public class PlayCountHandler implements HttpHandler {
@@ -79,10 +88,9 @@ public class HTTPSServer {
                         response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                     } else {
                         String albumId = query.get("albumid").get(0);
-                        if (cache.isKeyInCache(albumId)) {
-                            System.out.println("Retrieving from cache: " + albumId);
+                        if (cache.containsKey(albumId)) {
                             statusCode = 200;
-                            response = cache.get(albumId).getObjectValue().toString();
+                            response = cache.get(albumId);
                         } else {
                             try {
                                 MercuryRequests.AlbumWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getAlbumInfo(albumId)); // Get album info with albumId
@@ -108,9 +116,8 @@ public class HTTPSServer {
                             }
 
                             response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
-                            if (statusCode == 200 && !cache.isKeyInCache(albumId)) { // If response was successful, save response in cache
-                                System.out.println("Adding to cache: " + albumId + " (Cache size: " + cache.getSize() + ")");
-                                cache.put(new Element(albumId, response));
+                            if (statusCode == 200) { // If response was successful, save response in cache
+                                cache.putIfAbsent(albumId, response);
                             }
                         }
                     }
