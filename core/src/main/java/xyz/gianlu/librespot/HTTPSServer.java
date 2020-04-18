@@ -56,8 +56,8 @@ public class HTTPSServer {
 
         @Override
         public void handle(HttpExchange httpEx) throws IOException {
-            String response = "";
-            int statusCode = 500;
+            String response;
+            int statusCode;
             if (httpEx.getRequestMethod().equals("GET")) {
                 Map<String, Object> res = new HashMap<>();
                 if (httpEx.getRequestURI().getQuery() == null) {
@@ -80,40 +80,12 @@ public class HTTPSServer {
                     } else {
                         String albumId = query.get("albumid").get(0);
                         if (cache.isKeyInCache(albumId)) {
+                            System.out.println("Retrieving from cache: " + albumId);
                             statusCode = 200;
                             response = cache.get(albumId).getObjectValue().toString();
                         } else {
                             try {
                                 MercuryRequests.AlbumWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getAlbumInfo(albumId)); // Get album info with albumId
-
-//                            This part processes the output before sending, which results in lower response size. However, it doubles the response time.
-//                            This could be fixed by optimizing it, but I don't feel like doing that right now :P
-
-//                            Map<String, Object> data = new HashMap<>();
-//                            data.put("name", resp.obj.get("name").getAsString());
-//
-//                            List<Map<String, Object>> discsArr = new ArrayList<>();
-//                            JsonArray discs = resp.obj.getAsJsonArray("discs");
-//                            for (JsonElement disc : discs) {
-//                                Map<String, Object> discMap = new HashMap<>();
-//                                discMap.put("number", disc.getAsJsonObject().get("number").getAsInt());
-//                                discMap.put("name", disc.getAsJsonObject().get("name").getAsString());
-//
-//                                JsonArray tracks = disc.getAsJsonObject().getAsJsonArray("tracks");
-//                                List<Map<String, Object>> tracksList = new ArrayList<>();
-//                                for (JsonElement track : tracks) {
-//                                    Map<String, Object> trackMap = new HashMap<>();
-//                                    trackMap.put("name", track.getAsJsonObject().get("name").getAsString());
-//                                    trackMap.put("playcount", track.getAsJsonObject().get("playcount").getAsInt());
-//                                    trackMap.put("uri", track.getAsJsonObject().get("uri").getAsString());
-//                                    tracksList.add(trackMap);
-//                                }
-//
-//                                discMap.put("tracks", tracksList);
-//                                discsArr.add(discMap);
-//                            }
-//
-//                            data.put("discs", discsArr);
 
                                 statusCode = 200;
                                 res.put("success", true);
@@ -121,7 +93,6 @@ public class HTTPSServer {
                             } catch (Exception e) {
                                 res.put("success", false);
                                 if (e.getMessage().startsWith("status: ")) {
-                                    System.out.println(e.getMessage().substring(8));
                                     statusCode = Integer.parseInt(e.getMessage().substring(8));
                                     if (statusCode == 404) {
                                         res.put("data", "albumid invalid; couldn't find album");
@@ -130,20 +101,20 @@ public class HTTPSServer {
                                         res.put("data", "An unknown error has occurred; logged to console");
                                     }
                                 } else {
+                                    statusCode = 500;
                                     e.printStackTrace();
                                     res.put("data", "An unknown error has occurred; logged to console");
                                 }
                             }
 
                             response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
-                            if (statusCode == 200) { // If response was successful, save response in cache
+                            if (statusCode == 200 && !cache.isKeyInCache(albumId)) { // If response was successful, save response in cache
+                                System.out.println("Adding to cache: " + albumId + " (Cache size: " + cache.getSize() + ")");
                                 cache.put(new Element(albumId, response));
                             }
                         }
                     }
                 }
-
-
             } else { // Invalid request type
                 statusCode = 404;
                 response = "Cannot " + httpEx.getRequestMethod() + " " + httpEx.getRequestURI().toString();

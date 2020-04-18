@@ -93,16 +93,6 @@ public class ApResolver {
     }
 
     @NotNull
-    public static String getRandomDealer() {
-        return getRandomOf("dealer");
-    }
-
-    @NotNull
-    public static String getRandomSpclient() {
-        return getRandomOf("spclient");
-    }
-
-    @NotNull
     public static String getRandomAccesspoint() {
         return getRandomOf("accesspoint");
     }

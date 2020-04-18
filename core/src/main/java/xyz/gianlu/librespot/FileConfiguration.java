@@ -18,10 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.gianlu.librespot.common.Utils;
 import xyz.gianlu.librespot.core.TimeProvider;
-import xyz.gianlu.librespot.core.ZeroconfServer;
-import xyz.gianlu.librespot.player.AudioOutput;
-import xyz.gianlu.librespot.player.PlayerRunner;
-import xyz.gianlu.librespot.player.codecs.AudioQuality;
 
 import java.io.File;
 import java.io.FileReader;
@@ -91,7 +87,7 @@ public final class FileConfiguration extends AbsConfiguration {
                     String key = split[0].substring(2);
                     config.set(key, convertFromString(key, split[1]));
                 } else {
-                    LOGGER.warn("Invalid command line argument: " + str);
+//                    LOGGER.warn("Invalid command line argument: " + str);
                 }
             }
         }
@@ -202,109 +198,6 @@ public final class FileConfiguration extends AbsConfiguration {
     }
 
     @Override
-    public boolean cacheEnabled() {
-        return config.get("cache.enabled");
-    }
-
-    @Override
-    public @NotNull File cacheDir() {
-        return new File((String) config.get("cache.dir"));
-    }
-
-    @Override
-    public boolean doCleanUp() {
-        return config.get("cache.doCleanUp");
-    }
-
-    @Override
-    public @NotNull AudioQuality preferredQuality() {
-        return config.getEnum("player.preferredAudioQuality", AudioQuality.class);
-    }
-
-    @Override
-    public @NotNull AudioOutput output() {
-        return config.getEnum("player.output", AudioOutput.class);
-    }
-
-    @Override
-    public @Nullable File outputPipe() {
-        String path = config.get("player.pipe");
-        if (path == null || path.isEmpty()) return null;
-        return new File(path);
-    }
-
-    @Override
-    public @Nullable File metadataPipe() {
-        String path = config.get("player.metadataPipe");
-        if (path == null || path.isEmpty()) return null;
-        return new File(path);
-    }
-
-    @Override
-    public boolean preloadEnabled() {
-        return config.get("preload.enabled");
-    }
-
-    @Override
-    public boolean enableNormalisation() {
-        return config.get("player.enableNormalisation");
-    }
-
-    @Override
-    public float normalisationPregain() {
-        Object raw = config.get("player.normalisationPregain");
-        if (raw instanceof String) {
-            return Float.parseFloat((String) raw);
-        } else if (raw instanceof Double) {
-            return ((Double) raw).floatValue();
-        } else if (raw instanceof Integer) {
-            return ((Integer) raw).floatValue();
-        } else {
-            throw new IllegalArgumentException(String.format("normalisationPregain is not a valid float: %s (%s) ", raw.toString(), raw.getClass()));
-        }
-    }
-
-    @NotNull
-    @Override
-    public String[] mixerSearchKeywords() {
-        return getStringArray("player.mixerSearchKeywords", ';');
-    }
-
-    @Override
-    public boolean logAvailableMixers() {
-        return config.get("player.logAvailableMixers");
-    }
-
-    @Override
-    public int initialVolume() {
-        int vol = config.get("player.initialVolume");
-        if (vol < 0 || vol > PlayerRunner.VOLUME_MAX)
-            throw new IllegalArgumentException("Invalid volume: " + vol);
-
-        return vol;
-    }
-
-    @Override
-    public boolean autoplayEnabled() {
-        return config.get("player.autoplayEnabled");
-    }
-
-    @Override
-    public int crossfadeDuration() {
-        return config.get("player.crossfadeDuration");
-    }
-
-    @Override
-    public int releaseLineDelay() {
-        return config.get("player.releaseLineDelay");
-    }
-
-    @Override
-    public boolean stopPlaybackOnChunkError() {
-        return config.get("player.stopPlaybackOnChunkError");
-    }
-
-    @Override
     public @Nullable String deviceId() {
         return config.get("deviceId");
     }
@@ -364,28 +257,6 @@ public final class FileConfiguration extends AbsConfiguration {
     }
 
     @Override
-    public boolean zeroconfListenAll() {
-        return config.get("zeroconf.listenAll");
-    }
-
-    @Override
-    public int zeroconfListenPort() {
-        int val = config.get("zeroconf.listenPort");
-        if (val == -1) return val;
-
-        if (val < ZeroconfServer.MIN_PORT || val > ZeroconfServer.MAX_PORT)
-            throw new IllegalArgumentException("Illegal port number: " + val);
-
-        return val;
-    }
-
-    @NotNull
-    @Override
-    public String[] zeroconfInterfaces() {
-        return getStringArray("zeroconf.interfaces", ',');
-    }
-
-    @Override
     public TimeProvider.@NotNull Method timeSynchronizationMethod() {
         return config.getEnum("time.synchronizationMethod", TimeProvider.Method.class);
     }
@@ -393,51 +264,6 @@ public final class FileConfiguration extends AbsConfiguration {
     @Override
     public int timeManualCorrection() {
         return config.get("time.manualCorrection");
-    }
-
-    @Override
-    public int apiPort() {
-        return config.get("api.port");
-    }
-
-    @Override
-    public @NotNull String apiHost() {
-        return config.get("api.host");
-    }
-
-    @Override
-    public boolean proxyEnabled() {
-        return config.get("proxy.enabled");
-    }
-
-    @Override
-    public @NotNull Proxy.Type proxyType() {
-        return config.getEnum("proxy.type", Proxy.Type.class);
-    }
-
-    @Override
-    public @NotNull String proxyAddress() {
-        return config.get("proxy.address");
-    }
-
-    @Override
-    public int proxyPort() {
-        return config.get("proxy.port");
-    }
-
-    @Override
-    public boolean proxyAuth() {
-        return config.get("proxy.auth");
-    }
-
-    @Override
-    public @NotNull String proxyUsername() {
-        return config.get("proxy.username");
-    }
-
-    @Override
-    public @NotNull String proxyPassword() {
-        return config.get("proxy.password");
     }
 
     @Override

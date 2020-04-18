@@ -8,10 +8,7 @@ import com.spotify.Keyexchange;
 import com.spotify.connectstate.Connect;
 import com.spotify.explicit.ExplicitContentPubsub;
 import com.spotify.explicit.ExplicitContentPubsub.UserAttributesUpdate;
-import okhttp3.Authenticator;
-import okhttp3.*;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
@@ -20,24 +17,14 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import xyz.gianlu.librespot.AbsConfiguration;
 import xyz.gianlu.librespot.Version;
-import xyz.gianlu.librespot.cache.CacheManager;
 import xyz.gianlu.librespot.common.NameThreadFactory;
 import xyz.gianlu.librespot.common.Utils;
 import xyz.gianlu.librespot.crypto.CipherPair;
 import xyz.gianlu.librespot.crypto.DiffieHellman;
-import xyz.gianlu.librespot.crypto.PBKDF2;
 import xyz.gianlu.librespot.crypto.Packet;
-import xyz.gianlu.librespot.dealer.ApiClient;
-import xyz.gianlu.librespot.dealer.DealerClient;
 import xyz.gianlu.librespot.mercury.MercuryClient;
 import xyz.gianlu.librespot.mercury.SubListener;
-import xyz.gianlu.librespot.player.AudioKeyManager;
-import xyz.gianlu.librespot.player.Player;
-import xyz.gianlu.librespot.player.feeders.PlayableContentFeeder;
-import xyz.gianlu.librespot.player.feeders.cdn.CdnManager;
-import xyz.gianlu.librespot.player.feeders.storage.ChannelManager;
 
-import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.DocumentBuilder;
@@ -47,6 +34,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.*;
@@ -87,7 +76,6 @@ public final class Session implements Closeable, SubListener {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NameThreadFactory(r -> "session-scheduler-" + r.hashCode()));
     private final ExecutorService executorService = Executors.newCachedThreadPool(new NameThreadFactory(r -> "handle-packet-" + r.hashCode()));
     private final AtomicBoolean authLock = new AtomicBoolean(false);
-    private final OkHttpClient client;
     private final List<CloseListener> closeListeners = Collections.synchronizedList(new ArrayList<>());
     private final List<ReconnectionListener> reconnectionListeners = Collections.synchronizedList(new ArrayList<>());
     private final Map<String, String> userAttributes = Collections.synchronizedMap(new HashMap<>());
@@ -96,16 +84,7 @@ public final class Session implements Closeable, SubListener {
     private Receiver receiver;
     private Authentication.APWelcome apWelcome = null;
     private MercuryClient mercuryClient;
-    private Player player;
-    private AudioKeyManager audioKeyManager;
-    private ChannelManager channelManager;
     private TokenProvider tokenProvider;
-    private CdnManager cdnManager;
-    private CacheManager cacheManager;
-    private DealerClient dealer;
-    private ApiClient api;
-    private SearchManager search;
-    private PlayableContentFeeder contentFeeder;
     private String countryCode = null;
     private volatile boolean closed = false;
     private volatile ScheduledFuture<?> scheduledReconnect = null;
@@ -113,43 +92,9 @@ public final class Session implements Closeable, SubListener {
     private Session(Inner inner, String addr) throws IOException {
         this.inner = inner;
         this.keys = new DiffieHellman(inner.random);
-        this.conn = ConnectionHolder.create(addr, inner.configuration);
-        this.client = createClient(inner.configuration);
+        this.conn = ConnectionHolder.create(addr);
 
-        LOGGER.info(String.format("Created new session! {deviceId: %s, ap: %s, proxy: %b} ", inner.deviceId, addr, inner.configuration.proxyEnabled()));
-    }
-
-    @NotNull
-    private static OkHttpClient createClient(@NotNull ProxyConfiguration conf) {
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.retryOnConnectionFailure(true);
-
-        if (conf.proxyEnabled() && conf.proxyType() != Proxy.Type.DIRECT) {
-            builder.proxy(new Proxy(conf.proxyType(), new InetSocketAddress(conf.proxyAddress(), conf.proxyPort())));
-            if (conf.proxyAuth()) {
-                builder.proxyAuthenticator(new Authenticator() {
-                    final String username = conf.proxyUsername();
-                    final String password = conf.proxyPassword();
-
-                    @Override
-                    public Request authenticate(Route route, @NotNull Response response) {
-                        String credential = Credentials.basic(username, password);
-                        return response.request().newBuilder()
-                                .header("Proxy-Authorization", credential)
-                                .build();
-                    }
-                });
-            }
-        }
-
-        return builder.build();
-    }
-
-    private static int readBlobInt(ByteBuffer buffer) {
-        int lo = buffer.get();
-        if ((lo & 0x80) == 0) return lo;
-        int hi = buffer.get();
-        return lo & 0x7f | hi << 7;
+        LOGGER.info(String.format("Created new session! {deviceId: %s, ap: %s} ", inner.deviceId, addr));
     }
 
     @NotNull
@@ -157,11 +102,6 @@ public final class Session implements Closeable, SubListener {
         ApResolver.fillPool();
         TimeProvider.init(inner.configuration);
         return new Session(inner, ApResolver.getRandomAccesspoint());
-    }
-
-    @NotNull
-    public OkHttpClient client() {
-        return client;
     }
 
     void connect() throws IOException, GeneralSecurityException, SpotifyAuthenticationException {
@@ -297,29 +237,18 @@ public final class Session implements Closeable, SubListener {
         synchronized (authLock) {
             mercuryClient = new MercuryClient(this);
             tokenProvider = new TokenProvider(this);
-//            audioKeyManager = new AudioKeyManager(this);
-//            channelManager = new ChannelManager(this);
-//            api = new ApiClient(this);
-//            cdnManager = new CdnManager(this);
-//            contentFeeder = new PlayableContentFeeder(this);
-//            cacheManager = new CacheManager(inner.configuration);
-//            dealer = new DealerClient(this);
-//            player = new Player(inner.configuration, this);
-//            search = new SearchManager(this);
 
             authLock.set(false);
             authLock.notifyAll();
         }
 
-//        dealer.connect();
-//        player.initState();
 
         TimeProvider.init(this);
 
         LOGGER.info(String.format("Authenticated as %s!", apWelcome.getCanonicalUsername()));
 
 
-//        mercuryClient.interestedIn("spotify:user:attributes:update", this);
+        mercuryClient.interestedIn("spotify:user:attributes:update", this);
     }
 
     /**
@@ -398,26 +327,6 @@ public final class Session implements Closeable, SubListener {
             receiver = null;
         }
 
-        if (player != null) {
-            player.close();
-            player = null;
-        }
-
-        if (dealer != null) {
-            dealer.close();
-            dealer = null;
-        }
-
-        if (audioKeyManager != null) {
-            audioKeyManager.close();
-            audioKeyManager = null;
-        }
-
-        if (channelManager != null) {
-            channelManager.close();
-            channelManager = null;
-        }
-
         if (mercuryClient != null) {
             mercuryClient.close();
             mercuryClient = null;
@@ -485,76 +394,6 @@ public final class Session implements Closeable, SubListener {
     }
 
     @NotNull
-    public AudioKeyManager audioKey() {
-        waitAuthLock();
-        if (audioKeyManager == null) throw new IllegalStateException("Session isn't authenticated!");
-        return audioKeyManager;
-    }
-
-    @NotNull
-    public CacheManager cache() {
-        waitAuthLock();
-        if (cacheManager == null) throw new IllegalStateException("Session isn't authenticated!");
-        return cacheManager;
-    }
-
-    @NotNull
-    public CdnManager cdn() {
-        waitAuthLock();
-        if (cdnManager == null) throw new IllegalStateException("Session isn't authenticated!");
-        return cdnManager;
-    }
-
-    @NotNull
-    public ChannelManager channel() {
-        waitAuthLock();
-        if (channelManager == null) throw new IllegalStateException("Session isn't authenticated!");
-        return channelManager;
-    }
-
-    @NotNull
-    public TokenProvider tokens() {
-        waitAuthLock();
-        if (tokenProvider == null) throw new IllegalStateException("Session isn't authenticated!");
-        return tokenProvider;
-    }
-
-    @NotNull
-    public DealerClient dealer() {
-        waitAuthLock();
-        if (dealer == null) throw new IllegalStateException("Session isn't authenticated!");
-        return dealer;
-    }
-
-    @NotNull
-    public ApiClient api() {
-        waitAuthLock();
-        if (api == null) throw new IllegalStateException("Session isn't authenticated!");
-        return api;
-    }
-
-    @NotNull
-    public PlayableContentFeeder contentFeeder() {
-        waitAuthLock();
-        if (contentFeeder == null) throw new IllegalStateException("Session isn't authenticated!");
-        return contentFeeder;
-    }
-
-    @NotNull
-    public Player player() {
-        waitAuthLock();
-        if (player == null) throw new IllegalStateException("Session isn't authenticated!");
-        return player;
-    }
-
-    @NotNull
-    public SearchManager search() {
-        waitAuthLock();
-        if (search == null) throw new IllegalStateException("Session isn't authenticated!");
-        return search;
-    }
-
-    @NotNull
     public String username() {
         return apWelcome().getCanonicalUsername();
     }
@@ -566,35 +405,14 @@ public final class Session implements Closeable, SubListener {
         return apWelcome;
     }
 
-    public boolean valid() {
-        if (closed) return false;
-
-        waitAuthLock();
-        return apWelcome != null && conn != null && !conn.socket.isClosed();
-    }
-
-    public boolean reconnecting() {
-        return !closed && conn == null;
-    }
-
     @NotNull
     public String deviceId() {
         return inner.deviceId;
     }
 
     @NotNull
-    public Connect.DeviceType deviceType() {
-        return inner.deviceType;
-    }
-
-    @NotNull
     ExecutorService executor() {
         return executorService;
-    }
-
-    @NotNull
-    public String deviceName() {
-        return inner.deviceName;
     }
 
     @NotNull
@@ -613,7 +431,7 @@ public final class Session implements Closeable, SubListener {
                 receiver.stop();
             }
 
-            conn = ConnectionHolder.create(ApResolver.getRandomAccesspoint(), conf());
+            conn = ConnectionHolder.create(ApResolver.getRandomAccesspoint());
             connect();
             authenticatePartial(Authentication.LoginCredentials.newBuilder()
                     .setUsername(apWelcome.getCanonicalUsername())
@@ -638,19 +456,6 @@ public final class Session implements Closeable, SubListener {
         return inner.configuration;
     }
 
-    @Nullable
-    public String countryCode() {
-        return countryCode;
-    }
-
-    public void addCloseListener(@NotNull CloseListener listener) {
-        if (!closeListeners.contains(listener)) closeListeners.add(listener);
-    }
-
-    public void addReconnectionListener(@NotNull ReconnectionListener listener) {
-        if (!reconnectionListeners.contains(listener)) reconnectionListeners.add(listener);
-    }
-
     private void parseProductInfo(@NotNull InputStream in) throws IOException, SAXException, ParserConfigurationException {
         DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document doc = dBuilder.parse(in);
@@ -668,16 +473,6 @@ public final class Session implements Closeable, SubListener {
         }
 
         LOGGER.trace("Parsed product info: " + userAttributes);
-    }
-
-    @Nullable
-    public String getUserAttribute(@NotNull String key) {
-        return userAttributes.get(key);
-    }
-
-    @Contract("_, !null -> !null")
-    public String getUserAttribute(@NotNull String key, @NotNull String fallback) {
-        return userAttributes.getOrDefault(key, fallback);
     }
 
     @Override
@@ -702,26 +497,6 @@ public final class Session implements Closeable, SubListener {
         void onConnectionDropped();
 
         void onConnectionEstablished();
-    }
-
-    public interface ProxyConfiguration {
-        boolean proxyEnabled();
-
-        @NotNull
-        Proxy.Type proxyType();
-
-        @NotNull
-        String proxyAddress();
-
-        int proxyPort();
-
-        boolean proxyAuth();
-
-        @NotNull
-        String proxyUsername();
-
-        @NotNull
-        String proxyPassword();
     }
 
     public interface CloseListener {
@@ -758,49 +533,6 @@ public final class Session implements Closeable, SubListener {
 
             return new Inner(deviceType, deviceName, configuration);
         }
-
-        @NotNull Authentication.LoginCredentials decryptBlob(String username, byte[] encryptedBlob) throws GeneralSecurityException, IOException {
-            encryptedBlob = Base64.getDecoder().decode(encryptedBlob);
-
-            byte[] secret = MessageDigest.getInstance("SHA-1").digest(deviceId.getBytes());
-            byte[] baseKey = PBKDF2.HmacSHA1(secret, username.getBytes(), 0x100, 20);
-
-            byte[] key = ByteBuffer.allocate(24)
-                    .put(MessageDigest.getInstance("SHA-1").digest(baseKey))
-                    .putInt(20)
-                    .array();
-
-            Cipher aes = Cipher.getInstance("AES/ECB/NoPadding");
-            aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
-            byte[] decryptedBlob = aes.doFinal(encryptedBlob);
-
-            int l = decryptedBlob.length;
-            for (int i = 0; i < l - 0x10; i++)
-                decryptedBlob[l - i - 1] ^= decryptedBlob[l - i - 0x11];
-
-            ByteBuffer blob = ByteBuffer.wrap(decryptedBlob);
-            blob.get();
-            int len = readBlobInt(blob);
-            blob.get(new byte[len]);
-            blob.get();
-
-            int typeInt = readBlobInt(blob);
-            Authentication.AuthenticationType type = Authentication.AuthenticationType.forNumber(typeInt);
-            if (type == null)
-                throw new IOException(new IllegalArgumentException("Unknown AuthenticationType: " + typeInt));
-
-            blob.get();
-
-            len = readBlobInt(blob);
-            byte[] authData = new byte[len];
-            blob.get(authData);
-
-            return Authentication.LoginCredentials.newBuilder()
-                    .setUsername(username)
-                    .setTyp(type)
-                    .setAuthData(ByteString.copyFrom(authData))
-                    .build();
-        }
     }
 
     /**
@@ -811,11 +543,6 @@ public final class Session implements Closeable, SubListener {
         private final AuthConfiguration authConf;
         private Authentication.LoginCredentials loginCredentials = null;
         private String[] args;
-
-        public Builder(@NotNull Connect.DeviceType deviceType, @NotNull String deviceName, @NotNull AbsConfiguration configuration) {
-            this.inner = new Inner(deviceType, deviceName, configuration);
-            this.authConf = configuration;
-        }
 
         public Builder(@NotNull AbsConfiguration configuration, @Nullable String[] args) {
             this.inner = Inner.from(configuration);
@@ -910,63 +637,11 @@ public final class Session implements Closeable, SubListener {
         }
 
         @NotNull
-        static ConnectionHolder create(@NotNull String addr, @NotNull ProxyConfiguration conf) throws IOException {
+        static ConnectionHolder create(@NotNull String addr) throws IOException {
             int colon = addr.indexOf(':');
             String apAddr = addr.substring(0, colon);
             int apPort = Integer.parseInt(addr.substring(colon + 1));
-            if (!conf.proxyEnabled() || conf.proxyType() == Proxy.Type.DIRECT)
-                return new ConnectionHolder(new Socket(apAddr, apPort));
-
-            switch (conf.proxyType()) {
-                case HTTP:
-                    Socket sock = new Socket(conf.proxyAddress(), conf.proxyPort());
-                    OutputStream out = sock.getOutputStream();
-                    DataInputStream in = new DataInputStream(sock.getInputStream());
-
-                    out.write(String.format("CONNECT %s:%d HTTP/1.0\n", apAddr, apPort).getBytes());
-                    if (conf.proxyAuth()) {
-                        out.write("Proxy-Authorization: Basic ".getBytes());
-                        out.write(Base64.getEncoder().encodeToString(String.format("%s:%s\n", conf.proxyUsername(), conf.proxyPassword()).getBytes()).getBytes());
-                    }
-
-                    out.write('\n');
-                    out.flush();
-
-                    String sl = Utils.readLine(in);
-                    if (!sl.contains("200")) throw new IOException("Failed connecting: " + sl);
-
-                    //noinspection StatementWithEmptyBody
-                    while (!Utils.readLine(in).isEmpty()) {
-                        // Read all headers
-                    }
-
-                    LOGGER.info("Successfully connected to the HTTP proxy.");
-                    return new ConnectionHolder(sock);
-                case SOCKS:
-                    if (conf.proxyAuth()) {
-                        java.net.Authenticator.setDefault(new java.net.Authenticator() {
-                            final String username = conf.proxyUsername();
-                            final String password = conf.proxyPassword();
-
-                            @Override
-                            protected PasswordAuthentication getPasswordAuthentication() {
-                                if (Objects.equals(getRequestingProtocol(), "SOCKS5") && Objects.equals(getRequestingPrompt(), "SOCKS authentication"))
-                                    return new PasswordAuthentication(username, password.toCharArray());
-
-                                return super.getPasswordAuthentication();
-                            }
-                        });
-                    }
-
-                    Proxy proxy = new Proxy(conf.proxyType(), new InetSocketAddress(conf.proxyAddress(), conf.proxyPort()));
-                    Socket proxySocket = new Socket(proxy);
-                    proxySocket.connect(new InetSocketAddress(apAddr, apPort));
-                    LOGGER.info("Successfully connected to the SOCKS proxy.");
-                    return new ConnectionHolder(proxySocket);
-                case DIRECT:
-                default:
-                    throw new UnsupportedOperationException();
-            }
+            return new ConnectionHolder(new Socket(apAddr, apPort));
         }
     }
 
@@ -1047,13 +722,7 @@ public final class Session implements Closeable, SubListener {
                         mercury().dispatch(packet);
                         break;
                     case AesKey:
-                    case AesKeyError:
-                        audioKey().dispatch(packet);
-                        break;
                     case ChannelError:
-                    case StreamChunkRes:
-                        channel().dispatch(packet);
-                        break;
                     case ProductInfo:
                         try {
                             parseProductInfo(new ByteArrayInputStream(packet.payload));

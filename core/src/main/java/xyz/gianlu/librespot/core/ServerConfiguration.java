@@ -3,8 +3,6 @@ package xyz.gianlu.librespot.core;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-
 /**
  * @author evilarceus
  */

@@ -51,8 +51,6 @@ public final class TimeProvider {
 
     public static void init(@NotNull Session session) {
         if (method != Method.MELODY) return;
-
-        updateMelody(session);
     }
 
     public static long currentTimeMillis() {
@@ -75,38 +73,6 @@ public final class TimeProvider {
             }
         } catch (SocketTimeoutException ex) {
             updateWithNtp();
-        }
-    }
-
-    private static void updateMelody(@NotNull Session session) {
-        try (Response resp = session.api().send("OPTIONS", "/melody/v1/time", null, null)) {
-            if (resp.code() != 200) {
-                LOGGER.error(String.format("Failed notifying server of time request! {code: %d, msg: %s}", resp.code(), resp.message()));
-                return;
-            }
-        } catch (IOException | MercuryClient.MercuryException ex) {
-            LOGGER.error("Failed notifying server of time request!", ex);
-            return;
-        }
-
-        try (Response resp = session.api().send("GET", "/melody/v1/time", null, null)) {
-            if (resp.code() != 200) {
-                LOGGER.error(String.format("Failed requesting time! {code: %d, msg: %s}", resp.code(), resp.message()));
-                return;
-            }
-
-            ResponseBody body = resp.body();
-            if (body == null) throw new IllegalStateException();
-
-            JsonObject obj = JsonParser.parseString(body.string()).getAsJsonObject();
-            long diff = obj.get("timestamp").getAsLong() - System.currentTimeMillis();
-            synchronized (offset) {
-                offset.set(diff);
-            }
-
-            LOGGER.info(String.format("Loaded time offset from melody: %dms", diff));
-        } catch (IOException | MercuryClient.MercuryException ex) {
-            LOGGER.error("Failed requesting time!", ex);
         }
     }
 
