@@ -9,7 +9,7 @@ import xyz.gianlu.librespot.core.*;
 /**
  * @author Gianlu
  */
-public abstract class AbsConfiguration implements TimeProvider.Configuration, AuthConfiguration, ServerConfiguration {
+public abstract class AbsConfiguration implements ServerConfiguration {
 
     @Nullable
     public abstract String deviceId();

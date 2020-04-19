@@ -1,28 +1,12 @@
-deviceId = "" ### Device ID (40 chars, leave empty for random)  ###
-deviceName = "librespot-java" ### Device name ###
-deviceType = "COMPUTER" ### Device type (COMPUTER, TABLET, SMARTPHONE, SPEAKER, TV, AVR, STB, AUDIO_DONGLE, GAME_CONSOLE, CAST_VIDEO, CAST_AUDIO, AUTOMOBILE, WEARABLE, UNKNOWN_SPOTIFY, CAR_THING, UNKNOWN) ###
 preferredLocale = "en" ### Preferred locale ###
 logLevel = "INFO" ### Log level (OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL) ###
-
-[auth] ### Authentication ###
-strategy = "USER_PASS" # Strategy (USER_PASS, ZEROCONF, BLOB, FACEBOOK)
-username = "" # Spotify username (BLOB, USER_PASS only)
-password = "" # Spotify password (USER_PASS only)
-blob = "" # Spotify authentication blob (BLOB only)
 storeCredentials = true # Whether to store reusable credentials on disk (not a plain password)
 credentialsFile = "creds.json" # Credentials file (JSON)
 
-[preload] ### Preload ###
-enabled = true # Preload enabled
-
-[time] ### Time correction ###
-synchronizationMethod = "NTP" # Time synchronization method (NTP, PING, MELODY, MANUAL)
-manualCorrection = 0 # Manual time correction in millis
-
 ### Server ###
 [server]
-port = 8080
-endpoint = "/albumPlayCount"
-enableHttps = false
-httpsKs = ""
-httpsKsPass = ""
+port = 8080 # Selects what port to listen for HTTP requests on
+endpoint = "/albumPlayCount" # Endpoint at which the user can send HTTP GET requests to the API
+enableHttps = false # If true, enables HTTPS support
+httpsKs = "" # Location to keystore with HTTPS certificate and key
+httpsKsPass = "" # Password to HTTPS keystore file (if applicable)

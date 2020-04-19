@@ -17,13 +17,11 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.gianlu.librespot.common.Utils;
-import xyz.gianlu.librespot.core.TimeProvider;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -190,26 +188,19 @@ public final class FileConfiguration extends AbsConfiguration {
         }
     }
 
-    @NotNull
-    private String[] getStringArray(@NotNull String key, char separator) {
-        String str = config.get(key);
-        if ((str = str.trim()).isEmpty()) return new String[0];
-        else return Utils.split(str, separator);
-    }
-
     @Override
     public @Nullable String deviceId() {
-        return config.get("deviceId");
+        return "c70f928698cc099e39bddfd469f7de38e3b805db";
     }
 
     @Override
     public @Nullable String deviceName() {
-        return config.get("deviceName");
+        return "sp-playcount-librespot";
     }
 
     @Override
     public @Nullable Connect.DeviceType deviceType() {
-        return config.getEnum("deviceType", Connect.DeviceType.class);
+        return Connect.DeviceType.UNKNOWN;
     }
 
     @Override
@@ -224,46 +215,15 @@ public final class FileConfiguration extends AbsConfiguration {
     }
 
     @Override
-    public @Nullable String authUsername() {
-        return config.get("auth.username");
-    }
-
-    @Override
-    public @Nullable String authPassword() {
-        return config.get("auth.password");
-    }
-
-    @Override
-    public @Nullable String authBlob() {
-        return config.get("auth.blob");
-    }
-
-    @NotNull
-    @Override
-    public Strategy authStrategy() {
-        return config.getEnum("auth.strategy", Strategy.class);
-    }
-
-    @Override
     public boolean storeCredentials() {
-        return config.get("auth.storeCredentials");
+        return config.get("storeCredentials");
     }
 
     @Override
     public @Nullable File credentialsFile() {
-        String path = config.get("auth.credentialsFile");
+        String path = config.get("credentialsFile");
         if (path == null || path.isEmpty()) return null;
         return new File(path);
-    }
-
-    @Override
-    public TimeProvider.@NotNull Method timeSynchronizationMethod() {
-        return config.getEnum("time.synchronizationMethod", TimeProvider.Method.class);
-    }
-
-    @Override
-    public int timeManualCorrection() {
-        return config.get("time.manualCorrection");
     }
 
     @Override

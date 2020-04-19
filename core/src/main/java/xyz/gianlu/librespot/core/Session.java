@@ -34,8 +34,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.*;
@@ -84,7 +82,6 @@ public final class Session implements Closeable, SubListener {
     private Receiver receiver;
     private Authentication.APWelcome apWelcome = null;
     private MercuryClient mercuryClient;
-    private TokenProvider tokenProvider;
     private String countryCode = null;
     private volatile boolean closed = false;
     private volatile ScheduledFuture<?> scheduledReconnect = null;
@@ -100,7 +97,6 @@ public final class Session implements Closeable, SubListener {
     @NotNull
     static Session from(@NotNull Inner inner) throws IOException {
         ApResolver.fillPool();
-        TimeProvider.init(inner.configuration);
         return new Session(inner, ApResolver.getRandomAccesspoint());
     }
 
@@ -236,14 +232,12 @@ public final class Session implements Closeable, SubListener {
 
         synchronized (authLock) {
             mercuryClient = new MercuryClient(this);
-            tokenProvider = new TokenProvider(this);
 
             authLock.set(false);
             authLock.notifyAll();
         }
 
 
-        TimeProvider.init(this);
 
         LOGGER.info(String.format("Authenticated as %s!", apWelcome.getCanonicalUsername()));
 
@@ -394,20 +388,10 @@ public final class Session implements Closeable, SubListener {
     }
 
     @NotNull
-    public String username() {
-        return apWelcome().getCanonicalUsername();
-    }
-
-    @NotNull
     public Authentication.APWelcome apWelcome() {
         waitAuthLock();
         if (apWelcome == null) throw new IllegalStateException("Session isn't authenticated!");
         return apWelcome;
-    }
-
-    @NotNull
-    public String deviceId() {
-        return inner.deviceId;
     }
 
     @NotNull
@@ -540,7 +524,7 @@ public final class Session implements Closeable, SubListener {
      */
     public static class Builder {
         private final Inner inner;
-        private final AuthConfiguration authConf;
+        private final AbsConfiguration authConf;
         private Authentication.LoginCredentials loginCredentials = null;
         private String[] args;
 
@@ -685,8 +669,6 @@ public final class Session implements Closeable, SubListener {
                             LOGGER.warn("Socket timed out. Reconnecting...");
                             reconnect();
                         }, 2 * 60 + 5, TimeUnit.SECONDS);
-
-                        TimeProvider.updateWithPing(packet.payload);
 
                         try {
                             send(Packet.Type.Pong, packet.payload);
