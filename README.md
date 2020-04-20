@@ -5,8 +5,9 @@
 
 # Advantages vs. [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount)
 * Does NOT require the Spotify desktop app (woo)
-* Lower CPU and memory usage (can be even lower once the code is fully changed)
+* Lower CPU and memory usage
 * More information given in API response
+* Provides endpoint for artist info (monthly listeners, top tracks, follower count, etc)
 
 ## Requirements
 * Java 8+
@@ -20,12 +21,20 @@
 4. Run the JAR again: `java -jar sp-playcount-librespot.jar`
 
 ## Usage
-Simply make a GET request to the endpoint with the query string "albumid" set to the ID of a Spotify album (ex. if the URL is https://open.spotify.com/album/6Lq1lrCfkpxKa4jCo5gKWr or spotify:album:6Lq1lrCfkpxKa4jCo5gKWr, the string is 6Lq1lrCfkpxKa4jCo5gKWr)
+Simply make a GET request to the endpoint with the query string `albumid` set to the ID of a Spotify album (ex. if the URL is https://open.spotify.com/album/6Lq1lrCfkpxKa4jCo5gKWr or spotify:album:6Lq1lrCfkpxKa4jCo5gKWr, the string is 6Lq1lrCfkpxKa4jCo5gKWr)
 
 Curl example: (endpoint is /albumPlayCount)
 ```bash
 $ curl https://example.com/albumPlayCount?albumid=6Lq1lrCfkpxKa4jCo5gKWr
 {"success": true, "data": {"uri":"spotify:album:6Lq1lrCfkpxKa4jCo5gKWr","name":"Good Faith","cover":{"uri":"https://i.scdn.co/image/ab67616d00001e02dc384e6d13983fe1cd415ade"},"year":2019,"track_count":10,"discs":[{"number":1 ...
+```
+
+There is also an endpoint for retrieving artist info. `artistid` must be set to the ID of a Spotify artist.
+
+Curl example: (endpoint is /artistInfo)
+```bash
+$ curl https://example.com/artistInfo?artistid=7A0awCXkE1FtSU8B0qwOJQ
+{"success": true, "data": {"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","info":{"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","name":"Jamie xx","portraits": ...
 ```
 
 ## Compiling (requires Maven)
@@ -39,18 +48,20 @@ To reset the configuration, simply delete the file and run the JAR again.
 ```
 [server]
 port = 8080
-endpoint = "/albumPlayCount"
+albumEndpoint = "/albumPlayCount"
+artistEndpoint = "/artistInfo"
 enableHttps = false
 httpsKs = ""
 httpsKsPass = ""
 ```
-| Option        | Description                                                              |
-|---------------|--------------------------------------------------------------------------|
-| `port`        | Selects what port to listen for HTTP requests on                         |
-| `endpoint`    | Endpoint at which the user can send HTTP GET requests to the API         |
-| `enableHttps` | If true, enables HTTPS support (requires certificate, see section below) |
-| `httpsKs`     | Location to keystore with HTTPS certificate and key                      |
-| `httpsKsPass` | Password to HTTPS keystore file (if applicable)                          |
+| Option             | Description                                                                           |
+|--------------------|---------------------------------------------------------------------------------------|
+| `port`             | Selects what port to listen for HTTP requests on                                      |
+| `albumEndpoint`    | Endpoint at which the user can send HTTP GET requests to the API for album info       |
+| `artistEndpoint`   | Endpoint at which the user can send HTTP GET requests to the API for artist info      |
+| `enableHttps`      | If true, enables HTTPS support (requires certificate, see section below)              |
+| `httpsKs`          | Location to keystore with HTTPS certificate and key                                   |
+| `httpsKsPass`      | Password to HTTPS keystore file (if applicable)                                       |
 
 ### HTTPS Configuration
 The server can be configured to use HTTPS. If you're using LetsEncrypt, use [this guide](https://www.wissel.net/blog/2018/03/letsencrypt-java-keystore.html) to create a keystore with the certificate.
@@ -65,6 +76,6 @@ httpsKsPass = "<keystore password (if applicable)>"
 ```
 
 ## Public API
-I am currently hosting this API at https://api.t4ils.dev/albumPlayCount.
+I am currently hosting this API at https://api.t4ils.dev. (endpoints: /albumPlayCount, /artistInfo)
 
 If your application previously used Spotify-PlayCount, you will need to update your application to support the new API response.

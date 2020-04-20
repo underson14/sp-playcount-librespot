@@ -93,8 +93,13 @@ public final class MercuryRequests {
     }
 
     @NotNull
-    public static JsonMercuryRequest<AlbumWrapper> getAlbumInfo(@NotNull String albumId) {
-        return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://album/v1/album-app/album/spotify:album:%s/desktop?catalogue=free&locale=en", albumId)), AlbumWrapper.class);
+    public static JsonMercuryRequest<GenericJsonWrapper> getAlbumInfo(@NotNull String albumId) {
+        return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://album/v1/album-app/album/spotify:album:%s/desktop?catalogue=free&locale=en", albumId)), GenericJsonWrapper.class);
+    }
+
+    @NotNull
+    public static JsonMercuryRequest<GenericJsonWrapper> getArtistInfo(@NotNull String artistId) {
+        return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://artist/v1/%s/desktop?format=json&locale=en&cat=1", artistId)), GenericJsonWrapper.class); // Hermes URI comes from Spotify client (Apps/artist.spa/artist.bundle.js)
     }
 
     @NotNull
@@ -170,9 +175,9 @@ public final class MercuryRequests {
         }
     }
 
-    public static final class AlbumWrapper extends JsonWrapper {
+    public static final class GenericJsonWrapper extends JsonWrapper {
 
-        public AlbumWrapper(@NotNull JsonObject obj) {
+        public GenericJsonWrapper(@NotNull JsonObject obj) {
             super(obj);
         }
     }

@@ -232,8 +232,13 @@ public final class FileConfiguration extends AbsConfiguration {
     }
 
     @Override
-    public @NotNull String endpoint() {
-        return config.get("server.endpoint");
+    public @NotNull String albumEndpoint() {
+        return config.get("server.albumEndpoint");
+    }
+
+    @Override
+    public @NotNull String artistEndpoint() {
+        return config.get("server.artistEndpoint");
     }
 
     @Override

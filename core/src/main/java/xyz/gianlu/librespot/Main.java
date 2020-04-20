@@ -17,15 +17,15 @@ public class Main {
         LogManager.getRootLogger().setLevel(conf.loggingLevel());
         Session session = new Session.Builder(conf, args).create();
 
-        HTTPSServer httpsServer = new HTTPSServer(conf, session.mercury());
-        httpsServer.start();
+        HTTPServer server = new HTTPServer(conf, session.mercury());
+        server.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 session.close();
-                if (httpsServer.httpsServer != null) httpsServer.httpsServer.stop(1);
-                if (httpsServer.httpServer != null) httpsServer.httpServer.stop(1);
-                httpsServer.threadPoolExecutor.shutdownNow();
+                if (server.httpsServer != null) server.httpsServer.stop(1);
+                if (server.httpServer != null) server.httpServer.stop(1);
+                server.threadPoolExecutor.shutdownNow();
             } catch (IOException ignored) {
             }
         }));

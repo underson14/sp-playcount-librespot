@@ -13,7 +13,10 @@ public interface ServerConfiguration {
     int port();
 
     @NotNull
-    String endpoint();
+    String albumEndpoint();
+
+    @NotNull
+    String artistEndpoint();
 
     boolean enableHttps();
 
