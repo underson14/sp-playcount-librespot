@@ -90,6 +90,7 @@ public class PlayCountHandler implements HttpHandler {
         }
 
         httpEx.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        httpEx.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         httpEx.sendResponseHeaders(statusCode, response.getBytes().length);
         OutputStream os = httpEx.getResponseBody();
         os.write(response.getBytes());
