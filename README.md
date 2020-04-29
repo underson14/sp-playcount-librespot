@@ -29,12 +29,20 @@ $ curl https://example.com/albumPlayCount?albumid=6Lq1lrCfkpxKa4jCo5gKWr
 {"success": true, "data": {"uri":"spotify:album:6Lq1lrCfkpxKa4jCo5gKWr","name":"Good Faith","cover":{"uri":"https://i.scdn.co/image/ab67616d00001e02dc384e6d13983fe1cd415ade"},"year":2019,"track_count":10,"discs":[{"number":1 ...
 ```
 
-There is also an endpoint for retrieving artist info. `artistid` must be set to the ID of a Spotify artist.
+There is also an endpoint for retrieving artist info (monthly listeners, top tracks w/ play count, follower count, albums/singles released by artist, etc). `artistid` must be set to the ID of a Spotify artist.
 
 Curl example: (endpoint is /artistInfo)
 ```bash
 $ curl https://example.com/artistInfo?artistid=7A0awCXkE1FtSU8B0qwOJQ
 {"success": true, "data": {"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","info":{"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","name":"Jamie xx","portraits": ...
+```
+
+There is also an endpoint for retrieving an artist's about page (includes biography, images, social links, etc). `artistid` must be set to the ID of a Spotify artist.
+
+Curl example: (endpoint is /artistAbout)
+```bash
+$ curl https://example.com/artistAbout?artistid=7A0awCXkE1FtSU8B0qwOJQ
+{"success": true, "data": {"name":"Jamie xx","artistUri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","isVerified":true,"biography":"Working with and without his Mercury Music...
 ```
 
 ## Compiling (requires Maven)
