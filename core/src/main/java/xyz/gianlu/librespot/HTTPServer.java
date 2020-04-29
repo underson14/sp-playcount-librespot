@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpsParameters;
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
 import org.cache2k.event.CacheEntryExpiredListener;
+import xyz.gianlu.librespot.handler.ArtistAboutHandler;
 import xyz.gianlu.librespot.handler.ArtistInfoHandler;
 import xyz.gianlu.librespot.handler.PlayCountHandler;
 import xyz.gianlu.librespot.mercury.MercuryClient;
@@ -87,6 +88,7 @@ public class HTTPServer {
                 threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
                 httpsServer.createContext(conf.albumEndpoint(), new PlayCountHandler(this.mercuryClient, this.cache));
                 httpsServer.createContext(conf.artistEndpoint(), new ArtistInfoHandler(this.mercuryClient, this.cache));
+                httpsServer.createContext(conf.artistAboutEndpoint(), new ArtistAboutHandler(this.mercuryClient, this.cache));
                 httpsServer.setExecutor(threadPoolExecutor);
                 httpsServer.start();
                 System.out.println("Listening on port " + httpsServer.getAddress().getPort());
@@ -95,6 +97,7 @@ public class HTTPServer {
                 threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
                 httpServer.createContext(conf.albumEndpoint(), new PlayCountHandler(this.mercuryClient, this.cache));
                 httpServer.createContext(conf.artistEndpoint(), new ArtistInfoHandler(this.mercuryClient, this.cache));
+                httpServer.createContext(conf.artistAboutEndpoint(), new ArtistAboutHandler(this.mercuryClient, this.cache));
                 httpServer.setExecutor(threadPoolExecutor);
                 httpServer.start();
                 System.out.println("Listening on port " + httpServer.getAddress().getPort());

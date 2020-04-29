@@ -1,15 +1,11 @@
 package xyz.gianlu.librespot.handler;
 
-import com.spotify.Mercury;
-import com.spotify.metadata.Metadata;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.cache2k.Cache;
 import xyz.gianlu.librespot.UrlParse;
-import xyz.gianlu.librespot.mercury.JsonMercuryRequest;
 import xyz.gianlu.librespot.mercury.MercuryClient;
 import xyz.gianlu.librespot.mercury.MercuryRequests;
-import xyz.gianlu.librespot.mercury.model.ArtistId;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -18,12 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 // This class may get merged with PlayCountHandler, as most of it is basically the same.
-public class ArtistInfoHandler implements HttpHandler {
+public class ArtistAboutHandler implements HttpHandler {
     private MercuryClient mercuryClient;
     private UrlParse urlParse;
     private Cache<String, String> cache;
 
-    public ArtistInfoHandler(MercuryClient mc, Cache<String, String> cache) {
+    public ArtistAboutHandler(MercuryClient mc, Cache<String, String> cache) {
         this.mercuryClient = mc;
         this.urlParse = new UrlParse();
         this.cache = cache;
@@ -59,7 +55,8 @@ public class ArtistInfoHandler implements HttpHandler {
                         response = cache.get("artist:" + artistId);
                     } else {
                         try {
-                            MercuryRequests.GenericJsonWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getArtistInfo(artistId)); // Get artist info with artistId
+                            MercuryRequests.GenericJsonWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getArtistAbout(artistId)); // Get artist about page with artistId
+                            System.out.println(resp.obj);
 
                             statusCode = 200;
                             res.put("success", true);

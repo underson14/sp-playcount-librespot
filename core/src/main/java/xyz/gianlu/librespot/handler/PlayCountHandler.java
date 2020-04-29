@@ -41,7 +41,7 @@ public class PlayCountHandler implements HttpHandler {
                     statusCode = 400;
                     res.put("success", false);
                     res.put("data", "albumid is not defined in the query");
-                    response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data")); // TODO: don't repeat this line ffs
+                    response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                 } else if (query.get("albumid").get(0).length() != 22) {
                     statusCode = 400;
                     res.put("success", false);

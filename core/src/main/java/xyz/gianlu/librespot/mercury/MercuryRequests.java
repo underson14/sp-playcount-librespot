@@ -103,6 +103,11 @@ public final class MercuryRequests {
     }
 
     @NotNull
+    public static JsonMercuryRequest<GenericJsonWrapper> getArtistAbout(@NotNull String artistId) {
+        return new JsonMercuryRequest<>(RawMercuryRequest.get(String.format("hm://artist-identity-view/v2/profile/%s?fields=name,autobiography,biography,gallery,monthlyListeners,avatar&imgSize=large", artistId)), GenericJsonWrapper.class); // Hermes URI comes from Spotify client (Apps/artist.spa/artist.bundle.js)
+    }
+
+    @NotNull
     public static RawMercuryRequest getAlbumInfoRaw(@NotNull String albumId) {
         return RawMercuryRequest.get(String.format("hm://album/v1/album-app/album/spotify:album:%s/desktop?catalogue=free&locale=en", albumId));
     }

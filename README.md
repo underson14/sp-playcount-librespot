@@ -50,18 +50,20 @@ To reset the configuration, simply delete the file and run the JAR again.
 port = 8080
 albumEndpoint = "/albumPlayCount"
 artistEndpoint = "/artistInfo"
+artistAboutEndpoint = "/artistAbout"
 enableHttps = false
 httpsKs = ""
 httpsKsPass = ""
 ```
-| Option             | Description                                                                           |
-|--------------------|---------------------------------------------------------------------------------------|
-| `port`             | Selects what port to listen for HTTP requests on                                      |
-| `albumEndpoint`    | Endpoint at which the user can send HTTP GET requests to the API for album info       |
-| `artistEndpoint`   | Endpoint at which the user can send HTTP GET requests to the API for artist info      |
-| `enableHttps`      | If true, enables HTTPS support (requires certificate, see section below)              |
-| `httpsKs`          | Location to keystore with HTTPS certificate and key                                   |
-| `httpsKsPass`      | Password to HTTPS keystore file (if applicable)                                       |
+| Option                  | Description                                                                                      |
+|-------------------------|--------------------------------------------------------------------------------------------------|
+| `port`                  | Selects what port to listen for HTTP requests on                                                 |
+| `albumEndpoint`         | Endpoint at which the user can send HTTP GET requests to the API for album info                  |
+| `artistEndpoint`        | Endpoint at which the user can send HTTP GET requests to the API for artist info                 |
+| `artistAboutEndpoint`   | Endpoint at which the user can send HTTP GET requests to the API for an artist's about page      |
+| `enableHttps`           | If true, enables HTTPS support (requires certificate, see section below)                         |
+| `httpsKs`               | Location to keystore with HTTPS certificate and key                                              |
+| `httpsKsPass`           | Password to HTTPS keystore file (if applicable)                                                  |
 
 ### HTTPS Configuration
 The server can be configured to use HTTPS. If you're using LetsEncrypt, use [this guide](https://www.wissel.net/blog/2018/03/letsencrypt-java-keystore.html) to create a keystore with the certificate.
