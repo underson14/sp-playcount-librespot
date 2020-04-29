@@ -1,9 +1,12 @@
 # sp-playcount-librespot
-`sp-playcount-librespot` is a modification of `librespot-java` that serves as an enhancement of [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount). This repository still needs to be optimized.
+`sp-playcount-librespot` is a modification of `librespot-java` that serves as an enhancement of [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount).
 
 **NOTE:** This repository will most likely be archived if I decide to rewrite this in another language.
 
-# Advantages vs. [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount)
+## Disclaimer
+This project is to be used for **educational purposes only**. We (librespot developers, librespot-java developers, and I) do not condone using this tool for commercial purposes. Doing so puts this project at risk and can cause legal issues (**the data is property of Spotify Technology S.A., not me**). Any attempt or request to pay me for anything related to this project will be denied.
+
+## Advantages vs. [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount)
 * Does NOT require the Spotify desktop app (woo)
 * Lower CPU and memory usage
 * More information given in API response
@@ -86,6 +89,6 @@ httpsKsPass = "<keystore password (if applicable)>"
 ```
 
 ## Public API
-I am currently hosting this API at https://api.t4ils.dev. (endpoints: /albumPlayCount, /artistInfo)
+I am currently hosting this API at https://api.t4ils.dev (endpoints: /albumPlayCount, /artistInfo, /artistAbout). Please use it for **educational purposes only** (see disclaimer).
 
 If your application previously used Spotify-PlayCount, you will need to update your application to support the new API response.
