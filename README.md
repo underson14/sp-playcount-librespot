@@ -4,7 +4,7 @@
 **NOTE:** This repository will most likely be archived if I decide to rewrite this in another language.
 
 ## Disclaimer
-This project is to be used for **educational purposes only**. We (librespot developers, librespot-java developers, and I) do not condone using this tool for commercial purposes. Doing so puts this project at risk and can cause legal issues (**the data is property of Spotify Technology S.A., not me**). Any attempt or request to pay me for anything related to this project will be denied.
+This project is to be used for **educational purposes only**. We (librespot developers, librespot-java developers, and I) do not condone using this tool for commercial purposes. Doing so puts this project at risk and can cause legal issues (**the data is property of Spotify, not me**). Any attempt or request to pay me for anything related to this project will be denied.
 
 ## Advantages vs. [Spotify-PlayCount](https://github.com/evilarceus/Spotify-PlayCount)
 * Does NOT require the Spotify desktop app (woo)
@@ -32,21 +32,10 @@ $ curl https://example.com/albumPlayCount?albumid=6Lq1lrCfkpxKa4jCo5gKWr
 {"success": true, "data": {"uri":"spotify:album:6Lq1lrCfkpxKa4jCo5gKWr","name":"Good Faith","cover":{"uri":"https://i.scdn.co/image/ab67616d00001e02dc384e6d13983fe1cd415ade"},"year":2019,"track_count":10,"discs":[{"number":1 ...
 ```
 
-There is also an endpoint for retrieving artist info (monthly listeners, top tracks w/ play count, follower count, albums/singles released by artist, etc). `artistid` must be set to the ID of a Spotify artist.
-
-Curl example: (endpoint is /artistInfo)
-```bash
-$ curl https://example.com/artistInfo?artistid=7A0awCXkE1FtSU8B0qwOJQ
-{"success": true, "data": {"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","info":{"uri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","name":"Jamie xx","portraits": ...
-```
-
-There is also an endpoint for retrieving an artist's about page (includes biography, images, social links, etc). `artistid` must be set to the ID of a Spotify artist.
-
-Curl example: (endpoint is /artistAbout)
-```bash
-$ curl https://example.com/artistAbout?artistid=7A0awCXkE1FtSU8B0qwOJQ
-{"success": true, "data": {"name":"Jamie xx","artistUri":"spotify:artist:7A0awCXkE1FtSU8B0qwOJQ","isVerified":true,"biography":"Working with and without his Mercury Music...
-```
+There are also endpoints for retrieving artist info. `artistid` must be set to the ID of a Spotify artist.
+* `/artistInfo?artistid=` (monthly listeners, top tracks w/ play count, follower count, albums/singles released by artist, etc)
+* `/artistAbout?artistid=` (biography, images, social links, etc)
+* `/artistInsights?artistid=` (monthly listeners, "Discovered On" playlists, cities w/ most listeners, etc)
 
 ## Compiling (requires Maven)
 1. Clone this repository: `git clone https://github.com/evilarceus/sp-playcount-librespot && cd sp-playcount-librespot`
@@ -66,15 +55,16 @@ enableHttps = false
 httpsKs = ""
 httpsKsPass = ""
 ```
-| Option                  | Description                                                                                      |
-|-------------------------|--------------------------------------------------------------------------------------------------|
-| `port`                  | Selects what port to listen for HTTP requests on                                                 |
-| `albumEndpoint`         | Endpoint at which the user can send HTTP GET requests to the API for album info                  |
-| `artistEndpoint`        | Endpoint at which the user can send HTTP GET requests to the API for artist info                 |
-| `artistAboutEndpoint`   | Endpoint at which the user can send HTTP GET requests to the API for an artist's about page      |
-| `enableHttps`           | If true, enables HTTPS support (requires certificate, see section below)                         |
-| `httpsKs`               | Location to keystore with HTTPS certificate and key                                              |
-| `httpsKsPass`           | Password to HTTPS keystore file (if applicable)                                                  |
+| Option                     | Description                                                                                      |
+|----------------------------|--------------------------------------------------------------------------------------------------|
+| `port`                     | Selects what port to listen for HTTP requests on                                                 |
+| `albumEndpoint`            | Endpoint at which the user can send HTTP GET requests to the API for album info                  |
+| `artistEndpoint`           | Endpoint at which the user can send HTTP GET requests to the API for artist info                 |
+| `artistAboutEndpoint`      | Endpoint at which the user can send HTTP GET requests to the API for an artist's about page      |
+| `artistInsightsEndpoint`   | Endpoint at which the user can send HTTP GET requests to the API for an artist's insights        |
+| `enableHttps`              | If true, enables HTTPS support (requires certificate, see section below)                         |
+| `httpsKs`                  | Location to keystore with HTTPS certificate and key                                              |
+| `httpsKsPass`              | Password to HTTPS keystore file (if applicable)                                                  |
 
 ### HTTPS Configuration
 The server can be configured to use HTTPS. If you're using LetsEncrypt, use [this guide](https://www.wissel.net/blog/2018/03/letsencrypt-java-keystore.html) to create a keystore with the certificate.

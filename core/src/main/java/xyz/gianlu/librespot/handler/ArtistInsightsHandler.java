@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 // This class may get merged with PlayCountHandler, as most of it is basically the same.
-public class ArtistAboutHandler implements HttpHandler {
+public class ArtistInsightsHandler implements HttpHandler {
     private MercuryClient mercuryClient;
     private UrlParse urlParse;
     private Cache<String, String> cache;
 
-    public ArtistAboutHandler(MercuryClient mc, Cache<String, String> cache) {
+    public ArtistInsightsHandler(MercuryClient mc, Cache<String, String> cache) {
         this.mercuryClient = mc;
         this.urlParse = new UrlParse();
         this.cache = cache;
@@ -50,12 +50,12 @@ public class ArtistAboutHandler implements HttpHandler {
                     response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                 } else {
                     String artistId = query.get("artistid").get(0);
-                    if (cache.containsKey("artist_about:" + artistId)) {
+                    if (cache.containsKey("artist_insights:" + artistId)) {
                         statusCode = 200;
-                        response = cache.get("artist_about:" + artistId);
+                        response = cache.get("artist_insights:" + artistId);
                     } else {
                         try {
-                            MercuryRequests.GenericJsonWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getArtistAbout(artistId)); // Get artist about page with artistId
+                            MercuryRequests.GenericJsonWrapper resp = this.mercuryClient.sendSync(MercuryRequests.getArtistInsights(artistId)); // Get artist insights with artistId
                             System.out.println(resp.obj);
 
                             statusCode = 200;
@@ -80,7 +80,7 @@ public class ArtistAboutHandler implements HttpHandler {
 
                         response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                         if (statusCode == 200) { // If response was successful, save response in cache
-                            cache.putIfAbsent("artist_about:" + artistId, response);
+                            cache.putIfAbsent("artist_insights:" + artistId, response);
                         }
                     }
                 }

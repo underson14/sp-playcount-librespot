@@ -247,6 +247,11 @@ public final class FileConfiguration extends AbsConfiguration {
     }
 
     @Override
+    public @NotNull String artistInsightsEndpoint() {
+        return config.get("server.artistInsightsEndpoint");
+    }
+
+    @Override
     public boolean enableHttps() {
         return config.get("server.enableHttps");
     }

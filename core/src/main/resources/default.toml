@@ -9,6 +9,7 @@ port = 8080 # Selects what port to listen for HTTP requests on
 albumEndpoint = "/albumPlayCount" # Endpoint at which the user can send HTTP GET requests to the API for album info
 artistEndpoint = "/artistInfo" # Endpoint at which the user can send HTTP GET requests to the API for artist info
 artistAboutEndpoint = "/artistAbout" # Endpoint at which the user can send HTTP GET requests to the API for an artist's about page
+artistInsightsEndpoint = "/artistInsights" # Endpoint at which the user can send HTTP GET requests to the API for an artist's insights
 enableHttps = false # If true, enables HTTPS support
 httpsKs = "" # Location to keystore with HTTPS certificate and key
 httpsKsPass = "" # Password to HTTPS keystore file (if applicable)

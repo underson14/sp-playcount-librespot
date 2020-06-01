@@ -21,6 +21,9 @@ public interface ServerConfiguration {
     @NotNull
     String artistAboutEndpoint();
 
+    @NotNull
+    String artistInsightsEndpoint();
+
     boolean enableHttps();
 
     @Nullable
