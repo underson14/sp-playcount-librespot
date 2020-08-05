@@ -39,19 +39,19 @@ public class ArtistInfoHandler implements HttpHandler {
                 statusCode = 400;
                 res.put("success", false);
                 res.put("data", "artistid is not defined in the query");
-                response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
+                response = String.format("{\"success\": %s, \"data\": \"%s\"}", res.get("success"), res.get("data"));
             } else {
                 Map<String, List<String>> query = urlParse.parse(httpEx.getRequestURI().getQuery());
                 if (!query.containsKey("artistid")) {
                     statusCode = 400;
                     res.put("success", false);
                     res.put("data", "artistid is not defined in the query");
-                    response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
+                    response = String.format("{\"success\": %s, \"data\": \"%s\"}", res.get("success"), res.get("data"));
                 } else if (query.get("artistid").get(0).length() != 22) {
                     statusCode = 400;
                     res.put("success", false);
                     res.put("data", "artistid is invalid; artistid length does not equal 22");
-                    response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
+                    response = String.format("{\"success\": %s, \"data\": \"%s\"}", res.get("success"), res.get("data"));
                 } else {
                     String artistId = query.get("artistid").get(0);
                     if (cache.containsKey("artist:" + artistId)) {
@@ -64,6 +64,8 @@ public class ArtistInfoHandler implements HttpHandler {
                             statusCode = 200;
                             res.put("success", true);
                             res.put("data", resp.obj);
+
+                            response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                         } catch (Exception e) {
                             res.put("success", false);
                             if (e.getMessage().startsWith("status: ")) {
@@ -79,9 +81,10 @@ public class ArtistInfoHandler implements HttpHandler {
                                 e.printStackTrace();
                                 res.put("data", "An unknown error has occurred; logged to console");
                             }
+
+                            response = String.format("{\"success\": %s, \"data\": \"%s\"}", res.get("success"), res.get("data"));
                         }
 
-                        response = String.format("{\"success\": %s, \"data\": %s}", res.get("success"), res.get("data"));
                         if (statusCode == 200) { // If response was successful, save response in cache
                             cache.putIfAbsent("artist:" + artistId, response);
                         }
