@@ -28,7 +28,7 @@ Simply make a GET request to the endpoint with the query string `albumid` set to
 
 Curl example: (endpoint is /albumPlayCount)
 ```bash
-$ curl https://example.com/albumPlayCount?albumid=6Lq1lrCfkpxKa4jCo5gKWr
+$ curl http://localhost:8080/albumPlayCount?albumid=6Lq1lrCfkpxKa4jCo5gKWr
 {"success": true, "data": {"uri":"spotify:album:6Lq1lrCfkpxKa4jCo5gKWr","name":"Good Faith","cover":{"uri":"https://i.scdn.co/image/ab67616d00001e02dc384e6d13983fe1cd415ade"},"year":2019,"track_count":10,"discs":[{"number":1 ...
 ```
 
